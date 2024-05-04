@@ -1,7 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
 import { toNodeReadableStream } from "./toNodeReadableStream";
-import { resolve } from "dns";
-import { rejects } from "assert";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -42,6 +40,45 @@ function uploadFileToCloudinary(file: File) {
   });
 }
 
+function deleteImageFromCloudinary(imagePath: string) {
+  const id = getIdFromCloudinaryURL(imagePath);
+  console.log("ImageId", id);
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(
+      id,
+      { resource_type: "image" },
+      (err, result) => {
+        if (err) reject(err);
+        resolve(result);
+      }
+    );
+  });
+}
+
+function deleteFileFromCloudinary(filePath: string) {
+  const id = getIdFromCloudinaryURL(filePath);
+  console.log("FileId", id);
+
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(id, { resource_type: "raw" }, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+    });
+  });
+}
+
+function getIdFromCloudinaryURL(url: string) {
+  const parts = url.split("/");
+  const index = parts.findIndex((part) => part.startsWith("v"));
+  if (index < 0) throw new Error("Invalid id");
+
+  const lastElString = parts[parts.length - 1].split(".")[0];
+  parts.pop();
+  parts.push(lastElString);
+
+  return parts.slice(index + 1).join("/");
+}
+
 // async function convertImageToBase64Encoding(file: File) {
 //   const fileBuffer = await file.arrayBuffer();
 //   const fileArray = Array.from(new Uint8Array(fileBuffer));
@@ -49,4 +86,10 @@ function uploadFileToCloudinary(file: File) {
 //   return fileData.toString("base64");
 // }
 
-export { cloudinary, uploadImageToCloudinary, uploadFileToCloudinary };
+export {
+  cloudinary,
+  uploadImageToCloudinary,
+  uploadFileToCloudinary,
+  deleteImageFromCloudinary,
+  deleteFileFromCloudinary,
+};

@@ -8,51 +8,58 @@ import {
 import { pool } from "@/db";
 import React from "react";
 import { formatCurrency, formatNumber } from "@/lib/formatter";
+import { connectDB } from "@/db/connection";
 
 async function getSalesData() {
+  connectDB();
+
   const p1 = pool.query(`
-    Select SUM(priceInCents) from orders
+    Select SUM(priceInCents) as sum from orders
   `)!;
 
   const p2 = pool.query(`
-    Select COUNT(*) from orders
+    Select COUNT(*) as count from orders
   `)!;
 
   const [totalNumberOfSales, totalAmountOfOrders] = await Promise.all([p1, p2]);
 
   return {
-    totalNumberOfSales: (totalNumberOfSales?.rows[0] ?? 0) / 100,
-    totalAmountOfOrders: totalAmountOfOrders?.rows[0] ?? 0,
+    totalNumberOfSales: (totalNumberOfSales?.rows[0].sum ?? 0) / 100,
+    totalAmountOfOrders: totalAmountOfOrders?.rows[0].count ?? 0,
   };
 }
 
 async function getUsersData() {
+  connectDB();
+
   const p1 = pool.query(`
-    SELECT COUNT(*) from users
+    SELECT COUNT(*) as count from users
   `);
 
   const p2 = pool.query(`
-    SELECT AVG(priceInCents) from orders
+    SELECT AVG(priceInCents) as avg from orders
   `);
 
   const [totalUsersCount, averageValueOfOrder] = await Promise.all([p1, p2]);
 
   return {
-    totalUsersCount: totalUsersCount?.rows[0] ?? 0,
-    averageValueOfOrder: (averageValueOfOrder?.rows[0] ?? 0) / 100,
+    totalUsersCount: totalUsersCount?.rows[0].count ?? 0,
+    averageValueOfOrder: (averageValueOfOrder?.rows[0].avg ?? 0) / 100,
   };
 }
 
 async function getProductsData() {
+  connectDB();
+
   // await new Promise((r) => setTimeout(r, 5000));
   const p1 = pool.query(`
-    SELECT COUNT(*)
+    SELECT COUNT(*) as count
     FROM Products
     where isAvailableForPurchase = 'true'
   `);
 
   const p2 = pool.query(`
-    SELECT COUNT(*)
+    SELECT COUNT(*) as count
     FROM Products
     where isAvailableForPurchase = 'false'
   `);
@@ -60,8 +67,8 @@ async function getProductsData() {
   const [activeProducts, inactiveProducts] = await Promise.all([p1, p2]);
 
   return {
-    activeProducts: activeProducts?.rows[0] ?? 0,
-    inactiveProducts: inactiveProducts?.rows[0] ?? 0,
+    activeProducts: activeProducts?.rows[0].count ?? 0,
+    inactiveProducts: inactiveProducts?.rows[0].count ?? 0,
   };
 }
 
