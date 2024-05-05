@@ -42,7 +42,6 @@ function uploadFileToCloudinary(file: File) {
 
 function deleteImageFromCloudinary(imagePath: string) {
   const id = getIdFromCloudinaryURL(imagePath);
-  console.log("ImageId", id);
   return new Promise((resolve, reject) => {
     cloudinary.uploader.destroy(
       id,
@@ -57,7 +56,6 @@ function deleteImageFromCloudinary(imagePath: string) {
 
 function deleteFileFromCloudinary(filePath: string) {
   const id = getIdFromCloudinaryURL(filePath);
-  console.log("FileId", id);
 
   return new Promise((resolve, reject) => {
     cloudinary.uploader.destroy(id, { resource_type: "raw" }, (err, result) => {

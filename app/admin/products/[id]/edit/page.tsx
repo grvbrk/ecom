@@ -1,6 +1,6 @@
 import { pool } from "@/db";
-import PageHeader from "../../_components/PageHeader";
-import ProductForm from "../../new/_components/ProductForm";
+import PageHeader from "../../../_components/PageHeader";
+import ProductForm from "../../_components/ProductForm";
 import { QueryResult } from "pg";
 import { connectDB } from "@/db/connection";
 

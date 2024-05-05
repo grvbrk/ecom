@@ -9,7 +9,6 @@ import {
 import { pool } from "@/db";
 import { connectDB } from "@/db/connection";
 import { redirect } from "next/navigation";
-import { QueryResult } from "pg";
 
 const fileSchema = z.instanceof(File, { message: "Required" });
 const imageSchema = fileSchema.refine(
@@ -108,7 +107,7 @@ const editSchema = addSchema.extend({
 });
 
 export async function updateProduct(
-  id: number,
+  product: Product,
   prevState: unknown,
   formData: FormData
 ) {
@@ -121,32 +120,41 @@ export async function updateProduct(
     return error.formErrors.fieldErrors;
   }
 
-  const productResponse = (await pool.query(
-    `
-    SELECT *
-    FROM Products
-    WHERE id = $1
-  `,
-    [id]
-  )) as QueryResult<Product>;
+  let fileUrl = product.filepath;
+  let imageUrl = product.imagepath;
+  if (data.file != null && data.file.size > 0) {
+    // Delete the old file and upload the new file that we get from data.file
+    const p1 = deleteFileFromCloudinary(product.filepath);
+    const p2 = deleteImageFromCloudinary(product.imagepath);
+    await Promise.all([p1, p2]);
+    console.log("Successfully deleted from cloudinary");
 
-  const product = productResponse?.rows[0];
-
-  const p1 = uploadImageToCloudinary(data.image);
-  const p2 = uploadFileToCloudinary(data.file);
-  const [imageUrl, fileUrl] = await Promise.all([p1, p2]);
+    const p3 = uploadImageToCloudinary(data.image as File);
+    const p4 = uploadFileToCloudinary(data.file as File);
+    const [img, file] = await Promise.all([p3, p4]);
+    fileUrl = file as string;
+    imageUrl = img as string;
+    console.log("Successfully uploaded files to cloudinary");
+  }
 
   try {
     connectDB();
     await pool.query(
       `
-      INSERT INTO products (name, priceInCents, filePath, imagePath, description, isAvailableForPurchase)
-      VALUES
-        ($1, $2, $3, $4, $5, false)
+      UPDATE Products
+      SET name = $1, priceInCents = $2, filePath = $3, imagePath = $4, description = $5
+      WHERE id = $6
     `,
-      [data.name, data.priceInCents, fileUrl, imageUrl, data.description]
+      [
+        data.name,
+        data.priceInCents,
+        fileUrl,
+        imageUrl,
+        data.description,
+        product.id,
+      ]
     );
-    console.log("Product Added Successfully!");
+    console.log("Product Updated Successfully!");
   } catch (error) {
     console.log("Error writing to DB", error);
   }

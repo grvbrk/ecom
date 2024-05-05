@@ -9,13 +9,13 @@ import { formatCurrency } from "@/lib/formatter";
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
-export default function ProductForm({ product }: { product: Product }) {
+export default function ProductForm({ product }: { product?: Product }) {
   const [error, action] = useFormState(
-    product === undefined ? addProduct : updateProduct.bind(null, product.id),
+    product === undefined ? addProduct : updateProduct.bind(null, product),
     {}
   );
   const [priceInCents, setPriceInCents] = useState<number>(
-    product.priceincents
+    product?.priceincents ?? 0
   );
 
   return (
@@ -27,7 +27,7 @@ export default function ProductForm({ product }: { product: Product }) {
           id="name"
           name="name"
           required
-          defaultValue={product.name ?? ""}
+          defaultValue={product?.name ?? ""}
         />
       </div>
       {error.name && <div className="text-destructive">{error.name}</div>}
@@ -56,7 +56,7 @@ export default function ProductForm({ product }: { product: Product }) {
           id="description"
           name="description"
           required
-          defaultValue={product.description ?? ""}
+          defaultValue={product?.description ?? ""}
         />
       </div>
       {error.description && (
