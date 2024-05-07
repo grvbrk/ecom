@@ -9,6 +9,7 @@ import {
 import { pool } from "@/db";
 import { connectDB } from "@/db/connection";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 const fileSchema = z.instanceof(File, { message: "Required" });
 const imageSchema = fileSchema.refine(
@@ -52,6 +53,8 @@ export async function addProduct(prevState: unknown, formData: FormData) {
     console.log("Error writing to DB", error);
   }
 
+  revalidatePath("/");
+  revalidatePath("/products");
   redirect("/admin/products");
 }
 
@@ -68,6 +71,9 @@ export async function toggleProductAvailability(
   `,
     [isavailableforpurchase, id]
   );
+
+  revalidatePath("/");
+  revalidatePath("/products");
 }
 
 export async function deleteProduct(
@@ -99,6 +105,9 @@ export async function deleteProduct(
   } catch (error) {
     console.log("Error deleting File", error);
   }
+
+  revalidatePath("/");
+  revalidatePath("/products");
 }
 
 const editSchema = addSchema.extend({
@@ -159,5 +168,7 @@ export async function updateProduct(
     console.log("Error writing to DB", error);
   }
 
+  revalidatePath("/");
+  revalidatePath("/products");
   redirect("/admin/products");
 }
